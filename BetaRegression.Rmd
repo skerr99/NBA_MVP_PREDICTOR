@@ -1,0 +1,46 @@
+---
+title: "Beta Regression"
+author: "Sean Kerr"
+date: "2024-04-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(betareg)
+library(tidyverse)
+library(mltools)
+
+x_train <- read.csv('x_train.csv')[,2:16]
+x_test <- read.csv('x_test.csv')[,2:16]
+
+x_train_pca <- read.csv('x_train_pca.csv')[,2:10]
+x_test_pca <- read.csv('x_test_pca.csv')[,2:10]
+
+y_train <- read.csv('y_train.csv')[,2]
+y_test <- read.csv('y_test.csv')[,2]
+
+
+
+train_dat <- x_train %>% mutate(y=y_train) %>% mutate(y=ifelse(y==1, 0.99999, y))
+test_dat <- x_test %>% mutate(y=y_test) %>% mutate(y=ifelse(y==1, 0.99999, y))
+
+pca_train_dat <- x_train_pca %>% mutate(y = y_train) %>% mutate(y=ifelse(y==1, 0.99999, y))
+pca_test_dat <- x_test_pca %>% mutate(y=y_test) %>% mutate(y=ifelse(y==1, 0.99999, y))
+
+
+
+reg_mod <- betareg(y ~ ., train_dat)
+reg_pred <- predict(reg_mod, test_dat)
+reg_mse <- mse(preds = reg_pred, actuals = y_test)
+
+pca_mod <- betareg(y ~ ., pca_train_dat)
+pca_pred <- predict(pca_mod, pca_test_dat)
+pca_mse <- mse(preds = pca_pred, actuals = y_test)
+
+
+cat(' Regular model MSE:', reg_mse, '\n', 'PCA model MSE:', pca_mse)
+```
